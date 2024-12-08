@@ -178,7 +178,7 @@ function! s:binder._get_marked_candidates() abort
     throw 'vital: Action: The action binder is not markable'
   endif
   let signs = s:_get_signs()
-  let lnums = map(signs, 'v:val.line')
+  let lnums = map(signs, 'v:val.lnum')
   let candidates = []
   call map(lnums, 'extend(candidates, self._get_candidates(v:val, v:val))')
   return candidates
@@ -506,30 +506,17 @@ function! s:_call_for_mapping(name) abort range
 endfunction
 
 function! s:_get_signs() abort
-  let content = split(s:_execute('sign place buffer=' . bufnr('%')), '\r\?\n')
-  let signs = map(
-        \ filter(content, 'v:val =~# ''^\s\{4}'''),
-        \ 's:_parse_sign(v:val)',
-        \)
+  let content = sign_getplaced(bufnr("%"))
+  let signs = content[0]["signs"]
   return filter(signs, 'v:val.name ==# ''VitalActionMarkSelectedSign''')
 endfunction
 
 function! s:_get_signmap() abort
   let signmap = {}
   for sign in s:_get_signs()
-    let signmap[sign.line] = sign
+    let signmap[sign.lnum] = sign
   endfor
   return signmap
-endfunction
-
-function! s:_parse_sign(sign) abort
-  let terms = split(a:sign)
-  let sign = {}
-  for term in terms
-    let m = split(term, '=')
-    let sign[m[0]] = m[1]
-  endfor
-  return sign
 endfunction
 
 
